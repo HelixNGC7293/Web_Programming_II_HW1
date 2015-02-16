@@ -5,11 +5,84 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 	<title>E_1</title>
 	<script type="text/javascript" src="../dist/paper-full.js"></script>
-	<script type="text/paperscript" canvas="canvas">
+	<script type="text/paperscript" canvas="myCanvas">
 
+	var raster = new Raster('portrait.jpg');
+;
+	var loaded = false;
+
+	raster.on('load', function(){
+		loaded = true;
+		onResize();
+	});
+
+	raster.visible = false;
+
+	var lastPos = view.center;
+
+	function moveHandler(event){
+		if (!loaded)
+			return;
+		if (lastPos.getDistance(event.point) < 3)
+			return;
+		lastPos = event.point;
+
+		var size = this.bounds.size.clone();
+		var isLandscape = size.width > size.height;
+
+		size /= isLandscape ? [2, 1] : [1, 2];
+
+		var path = new Path.Rectangle({
+			point: this.bounds.topLeft.floor(),
+			size: size.ceil() + new Point(0.01, 0.01),
+			onMouseMove: moveHandler
+		});
+		path.fillColor = raster.getAverageColor(path);
+		path.rotation = Math.random() * 10 - 5;
+		//path.fillColor.red += Math.random()/10 - 0.05;
+
+		var path = new Path.Rectangle({
+			point: isLandscape
+				? this.bounds.topCenter.ceil()
+				: this.bounds.leftCenter.ceil(),
+			size: size.floor() + new Point(0.01, 0.01),
+			onMouseMove: moveHandler
+		})
+		path.fillColor = raster.getAverageColor(path);
+		path.rotation = Math.random() * 10 - 5;
+		//console.log(path.width);
+		/*
+		path.onFrame = function(event) {
+		this.rotation = Math.random() * 4 - 2;
+		}
+		*/
+		this.remove();
+	}
+
+
+
+	function insertpic(){
+		raster = new Raster('portrait.jpg');
+	}
+
+	function onResize(event)
+	{
+		if (!loaded)
+			return;
+		project.activeLayer.removeChildren();
+		raster.fitBounds(view.bounds, false);
+		var raster2 = new Raster('portrait.jpg');
+		raster2.fitBounds(view.bounds, false);
+
+		new Path.Rectangle({
+			rectangle: view.bounds,
+			fillColor: raster.getAverageColor(view.bounds),
+			onMouseMove: moveHandler
+		});
+	}
 	</script>
 </head>
-<body style="background:white">
-	<canvas style="position:absolute" id="canvas" resize stats></canvas>
+<body style="background:black">
+	<canvas style="position:absolute" id="myCanvas" resize stats></canvas>
 </body>
 </html>
